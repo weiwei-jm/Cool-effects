@@ -43,7 +43,7 @@ object CoolEffectsFX {
             val currentInner = baseInner + progress * size * 2f
             val currentOuter = currentInner + ringWidth
             val yScale = Mathf.cosDeg(tiltAngle)
-            val rotation = Mathf.degToRad * rotationDeg
+            val rotation = rotationDeg * Mathf.degRad
 
             Draw.color(Color.white, alpha)
             Lines.stroke(2f)
