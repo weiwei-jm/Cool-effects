@@ -32,20 +32,25 @@ object UltimateExplosionFX {
         }
 
         // 链式调用配置方法
-        fun setConfig(
-            radius: Float,
-            ringCol: Color = Color.white,
-            starCol: Color = Color.white,
-            fireCol: Color = Color.valueOf("ff6b00"),
-            soundEffect: Sound? = null
-        ): UltimateExplosionEffect {
-            this.shockwaveRadius = radius
-            this.ringColor = ringCol
-            this.starColor = starCol
-            this.fireColor = fireCol
-            this.sound = soundEffect
-            return this
-        }
+        // 链式调用配置方法
+fun setConfig(
+    radius: Float,
+    ringCol: Color = Color.white,
+    starCol: Color = Color.white,
+    fireCol: Color = Color.valueOf("ff6b00")
+): UltimateExplosionEffect {
+    this.shockwaveRadius = radius
+    this.ringColor = ringCol
+    this.starColor = starCol
+    this.fireColor = fireCol
+    return this
+}
+
+// 单独加一个设置声音的方法
+fun setSound(soundEffect: Sound?): UltimateExplosionEffect {
+    this.sound = soundEffect
+    return this
+}
 
         override fun render(e: Effect.EffectContainer) {
             // --- 播放声音 (只在第一帧播放) ---
