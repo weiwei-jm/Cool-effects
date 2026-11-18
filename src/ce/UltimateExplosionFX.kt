@@ -74,7 +74,7 @@ object UltimateExplosionFX {
             // ================= 1. 大圆环 & 屏幕特效 =================
             if (e.time < 60f) {
                 // 屏幕短暂闪白（前3帧）
-                if (e.time in 0f..3f) {
+                if (e.time < 3f == true) {
                     Draw.blend(Blending.additive)
                     Draw.color(Color.white)
                     Draw.alpha(0.8f - e.time * 0.25f)
