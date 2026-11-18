@@ -55,7 +55,7 @@ fun setSound(soundEffect: Sound?): UltimateExplosionEffect {
         override fun render(e: Effect.EffectContainer) {
             // --- 播放声音 (只在第一帧播放) ---
             if (e.time == 0f && sound != null) {
-                sound?.play(e.x, e.y, 1f, 1f)
+                sound?.play(e.x, e.y, 1f, 1f, false)
             }
 
             val lifetime = 200f // 特效总时长
