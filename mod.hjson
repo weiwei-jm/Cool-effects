@@ -1,20 +1,10 @@
-#the mod name as displayed in-game
-displayName: "Kotlin Mod Template"
-
-#the internal name of your mod
-name: "example-kotlin-mod"
-
-#your name
-author: "You"
-
-#the fully qualified main class of the mod
-main: "example.ExampleKotlinMod"
-
-#the mod description as seen in the mod dialog
-description: "A Mindustry Kotlin mod template."
-
-#the mod version
-version: 1.0
-
-#the minimum game build required to run this mod
-minGameVersion: 160
+{
+  "name": "cool-effects",
+  "displayName": "Cool Effects",
+  "author": "你的名字",
+  "description": "一个提供伪3D圆环扩散特效的模组",
+  "version": "1.0.0",
+  "minGameVersion": "146",
+  "main": "ce.CoolEffectsMod",
+  "java": true
+}
