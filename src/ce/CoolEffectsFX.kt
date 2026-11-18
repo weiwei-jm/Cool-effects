@@ -34,7 +34,7 @@ object CoolEffectsFX {
             return this
         }
 
-        override fun render(e: EffectContainer) {
+        override fun render(e: Effect.EffectContainer) {
             if (e.time < delay) return
             val progress = Mathf.clamp((e.time - delay) / lifetime)
             val alpha = 0.7f * (1f - progress)
