@@ -9,6 +9,12 @@ import mindustry.entities.Effect
 import mindustry.graphics.Layer
 
 object CoolEffectsFX {
+    
+    // 直接把 UltimateExplosionFX 里的特效“借”过来用
+    @JvmField
+    val ultimateExplosion: Effect = UltimateExplosionFX.ultimateExplosion
+
+    // ... 下面继续保留你之前的 ringHorizontal 等代码 ...
 
     // ==================== 圆环特效 ====================
     @JvmField
