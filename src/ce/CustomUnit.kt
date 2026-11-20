@@ -5,6 +5,12 @@ import arc.math.Mathf
 import mindustry.gen.Unit
 import mindustry.type.UnitType
 
+// 新增这个 object，游戏加载时就会自动注册这个单位
+object CustomUnits {
+    @JvmField
+    val testUnit: UnitType = CustomUnit()
+}
+
 class CustomUnit : UnitType("custom-unit") {
     init {
         // ================= 基础数值区 =================
