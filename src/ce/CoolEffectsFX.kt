@@ -1,62 +1,72 @@
 package ce
 
-import arc.Core
-import arc.audio.Sound
-import arc.graphics.Blending
 import arc.graphics.Color
 import arc.graphics.g2d.Draw
-import arc.graphics.g2d.Fill
 import arc.graphics.g2d.Lines
-import arc.math.Interp
 import arc.math.Mathf
-import arc.math.Rand
 import mindustry.entities.Effect
-import mindustry.graphics.Drawf
 import mindustry.graphics.Layer
 
-object UltimateExplosionFX {
+object CoolEffectsFX {
 
+    // ==================== 圆环特效 ====================
+    // 水平环：tiltAngle = 0，yScale = 1（正圆）
     @JvmField
-    val ultimateExplosion: Effect = UltimateExplosionEffect()
+    val ringHorizontal: Effect = RingEffect(0f, 0f)
 
-    class UltimateExplosionEffect : Effect() {
-        // ================= 可调参数区 =================
-        var shockwaveRadius = 200f                 // 爆炸半径
-        var ringColor = Color.white                // 圆环颜色
-        var starColor = Color.white                // 星星颜色
-        var fireColor = Color.valueOf("ff6b00")    // 火焰颜色
-        var sound: Sound? = null                   // 爆炸声音
+    // 偏转环：tiltAngle = 60°，rotation = 30°
+    @JvmField
+    val ringTilted: Effect = RingEffect(60f, 30f)
+
+    class RingEffect(
+        /** 偏转角度（度）：0 = 与地面平行（正圆），60 = 绕横向轴偏转 60°（压扁成椭圆） */
+        var tiltAngle: Float,
+        /** 绕中心旋转角度（度）：只影响椭圆朝向，不影响压扁程度 */
+        var rotationDeg: Float
+    ) : Effect() {
+        /** 尺寸：空心内半径 = size * 2，环宽 = size * 0.5 */
+        var size: Float = 10f
+        /** 生命周期（tick），60 tick = 1 秒 */
+        var lifetime: Float = 120f
+        /** 延迟（tick），第二个环用 30f = 0.5 秒 */
+        var delay: Float = 0f
 
         init {
             layer = Layer.effect
         }
 
-        // 链式调用配置方法
-        fun setConfig(
-            radius: Float,
-            ringCol: Color = Color.white,
-            starCol: Color = Color.white,
-            fireCol: Color = Color.valueOf("ff6b00")
-        ): UltimateExplosionEffect {
-            this.shockwaveRadius = radius
-            this.ringColor = ringCol
-            this.starColor = starCol
-            this.fireColor = fireCol
-            return this
-        }
-
-        // 单独设置声音的方法
-        fun setSound(soundEffect: Sound?): UltimateExplosionEffect {
-            this.sound = soundEffect
+        fun setSize(s: Float): RingEffect { size = s; return this }
+        fun setDelay(d: Float): RingEffect { delay = d; return this }
+        fun setTilt(tiltDeg: Float, rotDeg: Float): RingEffect {
+            this.tiltAngle = tiltDeg
+            this.rotationDeg = rotDeg
             return this
         }
 
         override fun render(e: Effect.EffectContainer) {
-            // --- 播放声音 (只在第一帧播放) ---
-            if (e.time.toInt() == 0 && sound != null) {
-                sound?.play(e.x, e.y, 1f, 1f, true)
-            }
+            // 这里绝对不能有任何 sound 相关的代码，这是导致第 57 行报错的原因
+            if (e.time < delay) return
+            val progress = Mathf.clamp((e.time - delay) / lifetime)
+            val alpha = 0.7f * (1f - progress)
 
+            val baseInner = size * 2f
+            val ringWidth = size * 0.5f
+            val currentInner = baseInner + progress * size * 2f
+            val currentOuter = currentInner + ringWidth
+            
+            val yScale = Mathf.cosDeg(tiltAngle)
+            val rotation = rotationDeg * Mathf.degRad
+
+            Draw.color(Color.white, alpha)
+            Lines.stroke(2f)
+            
+            drawEllipse(e.x, e.y, currentOuter, currentOuter * yScale, rotation, 48)
+            if (currentInner > 0f) {
+                drawEllipse(e.x, e.y, currentInner, currentInner * yScale, rotation, 48)
+            }
+            Draw.reset()
+        }
+        
             val lifetime = 200f // 特效总时长
             val progress = Mathf.clamp(e.time / lifetime)
             
