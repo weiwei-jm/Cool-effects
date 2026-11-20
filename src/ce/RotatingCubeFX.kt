@@ -78,7 +78,7 @@ object RotatingCubeFX {
                 val z3 = -x1 * Mathf.sin(angleY) + z2 * Mathf.cos(angleY)
                 
                 // 透视投影 (增加 3D 纵深感)
-                val focalLength = 200f // 焦距，值越小透视越夸张
+                val focalLength = 1200f // 焦距，值越小透视越夸张
                 val projectionScale = focalLength / (focalLength + z3)
                 
                 projectedPoints[i] = Point3D(x3 * projectionScale, y2 * projectionScale, z3)
