@@ -8,7 +8,8 @@ import mindustry.gen.Unit
 import mindustry.type.UnitType
 import mindustry.type.Weapon
 import mindustry.entities.bullet.BulletType
-import mindustry.gen.Healthc
+import mindustry.Vars
+import mindustry.gen.Unitc
 
 object CustomUnits {
     @JvmField
@@ -17,7 +18,7 @@ object CustomUnits {
 
 class CustomUnit : UnitType("ce-custom-unit") {
     init {
-        // ================= 基础数值区 =================
+        // 基础数值
         health = 1500f
         armor = 10f
         speed = 1.5f
@@ -26,7 +27,7 @@ class CustomUnit : UnitType("ce-custom-unit") {
         hitSize = 20f
         engineOffset = 15f
         
-        // 必须给他一把武器，他才会去锁定敌人
+        // 占位武器：让 AI 有索敌逻辑
         weapons.add(Weapon("dummy-weapon").apply {
             x = 0f
             y = 0f
@@ -54,13 +55,14 @@ class CustomUnit : UnitType("ce-custom-unit") {
         }.render(createContainer(unit.x, unit.y))
 
         // 2. 锁定敌人时的瞄准框
-        // 强制把 target 当作 Unit 处理，并使用 Unit 的属性
-        val target = unit.target() as? Unit
+        // 使用 Mindustry 的 Units.closestEnemy 直接搜索周围的敌人
+        // 600f 是索敌范围，与武器范围一致
+        val target = mindustry.entities.Units.closestEnemy(unit.team, unit.x, unit.y, 600f) { u -> u != unit }
         
         if (target != null && target.isValid) {
             TargetBoxFX.TargetBoxEffect().apply {
                 boxSize = 60f
-                // 直接用 target.health 和 target.maxHealth 属性
+                // 目标绝对是 Unit，直接计算血量比例
                 val healthFrac = target.health / target.maxHealth
                 color = Color.white.cpy().lerp(Color.valueOf("ff3333"), 1f - healthFrac)
                 lifetime = 99999f
