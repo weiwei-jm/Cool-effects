@@ -72,7 +72,7 @@ class CustomUnit : UnitType("ce-custom-unit") {
         container.x = x
         container.y = y
         // 时间取模循环
-        container.time = time % 120f 
+        container.time = time // 去掉取余，时间永远流动
         return container
     }
 }
