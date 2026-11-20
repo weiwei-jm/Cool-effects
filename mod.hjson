@@ -4,7 +4,7 @@
   "author": "你的名字",
   "description": "一个提供伪3D圆环扩散特效的模组",
   "version": "1.0.0",
-  "minGameVersion": "146",
+  "minGameVersion": "160",
   "main": "ce.CoolEffectsMod",
   "java": true
 }
