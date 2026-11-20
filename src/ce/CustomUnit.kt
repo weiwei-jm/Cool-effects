@@ -5,15 +5,14 @@ import arc.math.Mathf
 import mindustry.gen.Unit
 import mindustry.type.UnitType
 
-// 新增这个 object，游戏加载时就会自动注册这个单位
 object CustomUnits {
     @JvmField
     val testUnit: UnitType = CustomUnit()
 }
 
-class CustomUnit : UnitType("custom-unit") {
+class CustomUnit : UnitType("ce-custom-unit") {
     init {
-        // ================= 基础数值区 =================
+        // 基础数值
         health = 1500f
         armor = 10f
         speed = 1.5f
@@ -23,28 +22,32 @@ class CustomUnit : UnitType("custom-unit") {
         engineOffset = 15f
     }
 
-    override fun update(unit: Unit) {
-        super.update(unit)
+override fun draw(unit: Unit) {
+    // 先画单位原本的贴图
+    super.draw(unit)
+    
+    // ====== 1. 自己身上的旋转立方体 ======
+    val breathSize = 224f + Mathf.sin(arc.util.Time.time * 0.1f) * 16f
+    
+    RotatingCubeFX.RotatingCubeEffect().apply {
+        cubeSize = breathSize
+        color = Color.valueOf("ff3333")
+        strokeWidth = 2f
+        rotationSpeed = 2f
+        lifetime = 99999f 
+    }.render(createContainer(unit.x, unit.y, 0f))
 
-        // 1. 旋转立方体特效
-        // 使用 unit.id 和当前时间做正弦运算，大小在 224 到 240 之间浮动
-        // 注意：Mathf.sin() 返回 Double，所以必须加 .toFloat() 强转
-        val breathSize = 224f + Mathf.sin(unit.id + arc.util.Time.time * 0.1f).toFloat() * 16f
-        
-        // 直接实例化 Effect 并调用，不用管原本的 setConfig 返回类型
-        RotatingCubeFX.RotatingCubeEffect().apply {
-            cubeSize = breathSize
-            color = Color.valueOf("ff3333")
-            strokeWidth = 2f // 0.25格 = 2像素
-            rotationSpeed = 2f
-        }.at(unit.x, unit.y)
-
-        // 2. 瞄准框特效（保持原样，但同样直接实例化避开类型推断）
-        if (Mathf.chanceDelta(0.05)) {
-            TargetBoxFX.TargetBoxEffect().apply {
-                boxSize = 80f
-                color = Color.white
-            }.at(unit.x, unit.y)
-        }
+    // ====== 2. 锁定敌人时的瞄准框 ======
+    // unit.target 就是单位当前锁定的目标（如果没有目标就是 null）
+    val target = unit.target
+    
+    if (target != null && target.isValid) {
+        // 如果目标存在且还活着，就把瞄准框画在目标的位置
+        TargetBoxFX.TargetBoxEffect().apply {
+            boxSize = 60f // 瞄准框大小，可调
+            // 根据敌人的血量变颜色：满血是白色，残血变成深红色
+            color = Color.white.cpy().lerp(Color.valueOf("ff3333"), 1f - (target.health / target.maxHealth))
+            lifetime = 99999f
+        }.render(createContainer(target.x, target.y, 0f))
     }
 }
