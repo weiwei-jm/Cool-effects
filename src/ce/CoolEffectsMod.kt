@@ -3,5 +3,10 @@ package ce
 import mindustry.mod.Mod
 
 class CoolEffectsMod : Mod() {
-    // 特效通过 CoolEffectsFX 的静态字段暴露，不需要在这里初始化
+    
+    override fun loadContent() {
+        // 强制唤醒我们的单位
+        val unit = CustomUnits.testUnit
+        arc.util.Log.info("Cool Effects: Custom Unit Loaded!")
+    }
 }
