@@ -26,14 +26,14 @@ class CustomUnit : UnitType("ce-custom-unit") {
         hitSize = 20f
         engineOffset = 15f
         
-        // 必须给他一把武器，他才会去锁定敌人（射程很远，但没伤害）
+        // 必须给他一把武器，他才会去锁定敌人
         weapons.add(Weapon("dummy-weapon").apply {
             x = 0f
             y = 0f
-            reload = 999999f // 永远不开火，只用来让 AI 找敌人
+            reload = 999999f
             bullet = BulletType().apply {
                 damage = 0f
-                range = 600f // 600像素的索敌范围
+                range = 600f
                 speed = 0f
             }
         })
@@ -50,23 +50,24 @@ class CustomUnit : UnitType("ce-custom-unit") {
             color = Color.valueOf("ff3333")
             strokeWidth = 2f
             rotationSpeed = 2f
-            lifetime = 99999f // 强制常驻
+            lifetime = 99999f
         }.render(createContainer(unit.x, unit.y))
 
         // 2. 锁定敌人时的瞄准框
-        val target = unit.target
-        // 检查目标是不是一个活着的单位（健康组件）
-        if (target != null && target is Healthc && target.isValid) {
+        // 强制把 target 当作 Unit 处理，并使用 Unit 的属性
+        val target = unit.target() as? Unit
+        
+        if (target != null && target.isValid) {
             TargetBoxFX.TargetBoxEffect().apply {
                 boxSize = 60f
-                // 根据血量变色：满血白色 -> 残血红色
-                color = Color.white.cpy().lerp(Color.valueOf("ff3333"), 1f - (target.health / target.maxHealth))
+                // 直接用 target.health 和 target.maxHealth 属性
+                val healthFrac = target.health / target.maxHealth
+                color = Color.white.cpy().lerp(Color.valueOf("ff3333"), 1f - healthFrac)
                 lifetime = 99999f
             }.render(createContainer(target.x, target.y))
         }
     }
 
-    // 创建一个临时的 EffectContainer 给特效渲染使用
     private fun createContainer(x: Float, y: Float): Effect.EffectContainer {
         val container = Effect.EffectContainer()
         container.x = x
