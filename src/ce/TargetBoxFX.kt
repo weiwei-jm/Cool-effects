@@ -3,109 +3,97 @@ package ce
 import arc.graphics.Color
 import arc.graphics.g2d.Draw
 import arc.graphics.g2d.Lines
-import arc.math.Interp
 import arc.math.Mathf
 import mindustry.entities.Effect
 import mindustry.graphics.Layer
 
-object TargetBoxFX {
+object RotatingCubeFX {
 
     @JvmField
-    val targetBox: Effect = TargetBoxEffect()
+    val rotatingCube: Effect = RotatingCubeEffect()
 
-    class TargetBoxEffect : Effect() {
-        // ================= 可调参数区 =================
-        var color = Color.white            // 颜色（默认白色）
-        var boxSize = 50f                  // 基础大小（四个角的中心距离）
-        var cornerLength = 15f             // 每个角的边长（延伸长度）
-        var strokeWidth = 3f               // 线条粗细
-        
-        var rotAngleDeg = 45f              // 每次旋转的角度（度）
-        var rotInterval = 120f             // 每次旋转的间隔时间（tick，120=2秒）
-        var rotSpeed = 0.2f                // 旋转速度（占比：0.2 表示用这 2 秒内的最后 20% 时间转过去）
-        
-        var breathAmount = 8f              // 呼吸扩张的幅度
-        var breathSpeed = 0.05f            // 呼吸速度
+    class RotatingCubeEffect : Effect() {
+        var color = Color.white 
+        var cubeSize = 20f      
+        var strokeWidth = 2f    
+        var rotationSpeed = 2f  
+        var delay = 0f          
 
         init {
             layer = Layer.effect
-            lifetime = 300f // 默认持续5秒
         }
 
-        fun setConfig(
-            size: Float, 
-            col: Color = Color.white, 
-            stroke: Float = 3f, 
-            cLength: Float = 15f,
-            rotDeg: Float = 45f,
-            rotSpd: Float = 0.2f,
-            breatheAmt: Float = 8f,
-            breatheSpd: Float = 0.05f
-        ): TargetBoxEffect {
-            this.boxSize = size
+        fun setConfig(size: Float, col: Color, stroke: Float, speed: Float, delayTime: Float = 0f): RotatingCubeEffect {
+            this.cubeSize = size
             this.color = col
             this.strokeWidth = stroke
-            this.cornerLength = cLength
-            this.rotAngleDeg = rotDeg
-            this.rotSpeed = rotSpd
-            this.breathAmount = breatheAmt
-            this.breathSpeed = breatheSpd
+            this.rotationSpeed = speed
+            this.delay = delayTime
             return this
         }
 
+        private class Point3D(var x: Float, var y: Float, var z: Float)
+
         override fun render(e: Effect.EffectContainer) {
-            val progress = Mathf.clamp(e.time / lifetime)
+            if (e.time < delay) return
+
+            val elapsed = e.time - delay
+            val lifetime = 120f 
+            val progress = Mathf.clamp(elapsed / lifetime)
             
-            // 呼吸效果
-            val breathOffset = Mathf.sin(e.time * breathSpeed) * breathAmount
-            
-            // 旋转逻辑
-            val rotRad = rotAngleDeg * Mathf.degRad
-            val rotProgress = (e.time % rotInterval) / rotInterval
-            
-            // 如果当前周期进入了设定的旋转速度区间，就开始顺滑旋转
-            val rotThreshold = 1f - rotSpeed
-            val currentRot = if (rotProgress > rotThreshold) {
-                Interp.pow3Out.apply((rotProgress - rotThreshold) / rotSpeed) * rotRad
-            } else {
-                0f
+            // 【核心修改】强制不透明，并且线条粗细保持不变，解决会变透明的问题
+            Draw.color(color, 1f) 
+            Lines.stroke(strokeWidth) 
+
+            // 计算旋转角度
+            val angleX = progress * rotationSpeed * Mathf.PI2
+            val angleY = progress * rotationSpeed * Mathf.PI2 * 1.3f
+            val angleZ = progress * rotationSpeed * Mathf.PI2 * 0.7f
+
+            // 定义立方体的 8 个顶点
+            val s = cubeSize / 2f
+            val originalPoints = arrayOf(
+                Point3D(-s, -s, -s), Point3D( s, -s, -s), Point3D( s,  s, -s), Point3D(-s,  s, -s), 
+                Point3D(-s, -s,  s), Point3D( s, -s,  s), Point3D( s,  s,  s), Point3D(-s,  s,  s)  
+            )
+
+            // 旋转并投影
+            val projectedPoints = Array(8) { Point3D(0f, 0f, 0f) }
+            for (i in 0 until 8) {
+                val p = originalPoints[i]
+                
+                // 绕 Z 轴
+                var x1 = p.x * Mathf.cos(angleZ) - p.y * Mathf.sin(angleZ)
+                var y1 = p.x * Mathf.sin(angleZ) + p.y * Mathf.cos(angleZ)
+                var z1 = p.z
+                
+                // 绕 X 轴
+                val y2 = y1 * Mathf.cos(angleX) - z1 * Mathf.sin(angleX)
+                val z2 = y1 * Mathf.sin(angleX) + z1 * Mathf.cos(angleX)
+                
+                // 绕 Y 轴
+                val x3 = x1 * Mathf.cos(angleY) + z2 * Mathf.sin(angleY)
+                val z3 = -x1 * Mathf.sin(angleY) + z2 * Mathf.cos(angleY)
+                
+                // 透视投影 (焦距调大，防止超大立方体穿模)
+                val focalLength = 1200f 
+                val projectionScale = focalLength / (focalLength + z3)
+                
+                projectedPoints[i] = Point3D(x3 * projectionScale, y2 * projectionScale, z3)
             }
 
-            // 计算已经完成了多少个旋转周期
-            val totalRotations = Mathf.floor(e.time / rotInterval)
-            val finalRotation = currentRot + (totalRotations * rotRad)
+            // 连线
+            val edges = arrayOf(
+                intArrayOf(0, 1), intArrayOf(1, 2), intArrayOf(2, 3), intArrayOf(3, 0),
+                intArrayOf(4, 5), intArrayOf(5, 6), intArrayOf(6, 7), intArrayOf(7, 4),
+                intArrayOf(0, 4), intArrayOf(1, 5), intArrayOf(2, 6), intArrayOf(3, 7)
+            )
 
-            Draw.color(color)
-            // 呼吸闪烁：保持 0.8 的基础透明度，上下浮动 0.2
-            Draw.alpha(Mathf.absin(e.time, 0.1f, 0.2f) + 0.8f)
-            Lines.stroke(strokeWidth)
-            
-            val currentRadius = boxSize / 2f + breathOffset
-
-            // 画四个角
-            for (i in 0 until 4) {
-                val cornerAngle = i * (Mathf.PI / 2f) + finalRotation
-                
-                val cx = e.x + Mathf.cos(cornerAngle) * currentRadius * 1.414f
-                val cy = e.y + Mathf.sin(cornerAngle) * currentRadius * 1.414f
-                
-                val dir1 = cornerAngle + Mathf.PI * 0.75f
-                val dir2 = cornerAngle - Mathf.PI * 0.75f
-                
-                val x1 = cx + Mathf.cos(dir1) * cornerLength
-                val y1 = cy + Mathf.sin(dir1) * cornerLength
-                
-                val x2 = cx + Mathf.cos(dir2) * cornerLength
-                val y2 = cy + Mathf.sin(dir2) * cornerLength
-
-                Lines.line(x1, y1, cx, cy, false)
-                Lines.line(cx, cy, x2, y2, false)
+            for (edge in edges) {
+                val p1 = projectedPoints[edge[0]]
+                val p2 = projectedPoints[edge[1]]
+                Lines.line(e.x + p1.x, e.y + p1.y, e.x + p2.x, e.y + p2.y, false)
             }
-
-            // 中心小十字准星
-            Lines.stroke(strokeWidth * 0.5f)
-            Lines.line(e.x - 3f, e.y, e.x + 3f, e.y, false)
-            Lines.line(e.x, e.y - 3f, e.x, e.y + 3f, false)
 
             Draw.reset()
         }
