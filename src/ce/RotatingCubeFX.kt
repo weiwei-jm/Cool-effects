@@ -28,17 +28,18 @@ object RotatingCubeFX {
         override fun render(e: Effect.EffectContainer) {
             if (e.time < delay) return
 
-            val elapsed = e.time - delay
-            val lifetime = 120f 
-            val progress = Mathf.clamp(elapsed / lifetime)
+            // 让时间在 0~1 之间循环，防止精度爆炸
+            val progress = (e.time % 120f) / 120f
             
             // 强制不透明
             Draw.color(color, 1f) 
             Lines.stroke(strokeWidth) 
 
-            val angleX = progress * rotationSpeed * Mathf.PI2
-            val angleY = progress * rotationSpeed * Mathf.PI2 * 1.3f
-            val angleZ = progress * rotationSpeed * Mathf.PI2 * 0.7f
+            // 核心：结合游戏总时间，实现真正的无限旋转
+            val baseAngle = arc.util.Time.time * (rotationSpeed * 0.05f)
+            val angleX = baseAngle + progress * Mathf.PI2
+            val angleY = baseAngle * 1.3f + progress * Mathf.PI2 * 1.3f
+            val angleZ = baseAngle * 0.7f + progress * Mathf.PI2 * 0.7f
 
             val s = cubeSize / 2f
             val originalPoints = arrayOf(
