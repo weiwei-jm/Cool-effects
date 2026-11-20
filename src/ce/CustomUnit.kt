@@ -8,7 +8,6 @@ import mindustry.gen.Unit
 import mindustry.type.UnitType
 import mindustry.type.Weapon
 import mindustry.entities.bullet.BulletType
-import mindustry.graphics.Layer
 
 object CustomUnits {
     @JvmField
@@ -25,6 +24,7 @@ class CustomUnit : UnitType("ce-custom-unit") {
         hitSize = 20f
         engineOffset = 15f
         
+        // 占位武器，用来索敌
         weapons.add(Weapon("dummy-weapon").apply {
             reload = 999999f
             bullet = BulletType().apply {
@@ -38,19 +38,18 @@ class CustomUnit : UnitType("ce-custom-unit") {
     override fun draw(unit: Unit) {
         super.draw(unit)
 
-        // 把当前游戏时间作为时间流逝，这样它就会一直动！
-        val currentTime = Time.time 
+        val currentTime = Time.time
 
         // ================= 1. 旋转立方体 =================
+        // 范围 224~240 之间呼吸浮动
         val breathSize = 224f + Mathf.sin(currentTime * 0.05f) * 16f
         
         RotatingCubeFX.RotatingCubeEffect().apply {
             cubeSize = breathSize
-            color = Color.valueOf("ff3333")
+            color = Color.valueOf("ff3333") // 红色
             strokeWidth = 2f
-            rotationSpeed = 2f
-            // 关键：生命周期依然设为 2 秒，但通过外部传入时间让它一直转
-            lifetime = 120f 
+            rotationSpeed = 0.2f            // 缓慢旋转
+            lifetime = 120f
         }.render(createContainer(unit.x, unit.y, currentTime))
 
         // ================= 2. 瞄准框 =================
@@ -60,19 +59,19 @@ class CustomUnit : UnitType("ce-custom-unit") {
             TargetBoxFX.TargetBoxEffect().apply {
                 boxSize = 60f
                 val healthFrac = target.health / target.maxHealth
+                // 根据血量变色
                 color = Color.white.cpy().lerp(Color.valueOf("ff3333"), 1f - healthFrac)
-                lifetime = 120f // 同样给它 2 秒的周期
+                rotAngleDeg = 90f               // 每次旋转 90 度
+                lifetime = 120f
             }.render(createContainer(target.x, target.y, currentTime))
         }
     }
 
-    // 传入时间参数
     private fun createContainer(x: Float, y: Float, time: Float): Effect.EffectContainer {
         val container = Effect.EffectContainer()
         container.x = x
         container.y = y
-        // 这里的取余运算（% lifetime）会循环时间，让特效一直播放下去
-        // 120f 是我们在上面设置的 lifetime
+        // 时间取模循环
         container.time = time % 120f 
         return container
     }
