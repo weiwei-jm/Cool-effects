@@ -30,7 +30,6 @@ object TargetBoxFX {
         }
 
         override fun render(e: Effect.EffectContainer) {
-            val progress = Mathf.clamp(e.time / lifetime)
             val breathOffset = Mathf.sin(e.time * breathSpeed) * breathAmount
             
             val rotRad = rotAngleDeg * Mathf.degRad
