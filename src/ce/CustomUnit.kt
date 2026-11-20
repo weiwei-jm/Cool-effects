@@ -34,7 +34,7 @@ class CustomUnit : UnitType("custom-unit") {
         }.at(unit.x, unit.y)
 
         // 2. 瞄准框特效（保持原样，但同样直接实例化避开类型推断）
-        if (Mathf.chanceDelta(0.05f)) {
+        if (Mathf.chanceDelta(0.05)) {
             TargetBoxFX.TargetBoxEffect().apply {
                 boxSize = 80f
                 color = Color.white
